@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>钱包提现</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #F2F3F5; min-height: 100vh; max-width: 420px; margin: 0 auto; }
+
+  /* Header */
+  .header { background: #fff; padding: 12px 16px; display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; }
+  .header-back { font-size: 20px; color: #333; margin-right: 12px; text-decoration: none; }
+  .header-title { font-size: 17px; font-weight: 600; }
+
+  /* Warning Banner */
+  .warning-banner { background: #FFF7E6; border: 1px solid #FFE0B2; border-radius: 8px; margin: 12px 16px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .warning-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .warning-text { font-size: 13px; color: #8B6914; line-height: 1.6; }
+  .warning-text strong { color: #B8860B; }
+
+  .freeze-banner { background: #FEF0EF; border: 1px solid #FFCDD2; }
+  .freeze-banner .warning-text { color: #C62828; }
+  .freeze-banner .warning-text strong { color: #B71C1C; }
+
+  /* Card sections */
+  .section { background: #fff; border-radius: 12px; margin: 12px 16px; padding: 16px; }
+
+  /* Bank card */
+  .section-label { font-size: 12px; color: #999; margin-bottom: 12px; }
+  .bank-row { display: flex; align-items: center; gap: 12px; }
+  .bank-icon { width: 40px; height: 40px; background: #43B356; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 600; }
+  .bank-name { font-size: 15px; font-weight: 500; flex: 1; }
+  .bank-instant { font-size: 13px; color: #43B356; }
+
+  /* Amount section */
+  .amount-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .amount-input-row { display: flex; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #eee; margin-bottom: 12px; }
+  .amount-yen { font-size: 32px; font-weight: 600; color: #333; margin-right: 8px; }
+  .amount-input { font-size: 32px; font-weight: 600; border: none; outline: none; flex: 1; width: 100%; }
+  .amount-input::placeholder { color: #ddd; }
+  .balance-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .balance-text { font-size: 13px; color: #999; }
+  .balance-all { font-size: 13px; color: #43B356; cursor: pointer; }
+
+  /* Limit warning in amount section */
+  .limit-notice { background: #FFF7E6; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 12px; color: #8B6914; line-height: 1.5; display: flex; gap: 6px; align-items: flex-start; }
+  .limit-notice .icon { flex-shrink: 0; }
+
+  /* Reserve section */
+  .reserve-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .reserve-label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+  .badge-new { background: #43B356; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 8px; }
+  .help-icon { width: 16px; height: 16px; background: #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999; }
+  .toggle { width: 44px; height: 24px; background: #43B356; border-radius: 12px; position: relative; cursor: pointer; }
+  .toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: 2px; right: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .reserve-input { background: #F5F7F0; border-radius: 8px; padding: 12px; border-left: 3px solid #43B356; font-size: 16px; color: #333; margin-bottom: 12px; }
+  .reserve-desc { font-size: 12px; color: #999; line-height: 1.6; margin-bottom: 12px; }
+  .estimate-row { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f5f5f5; }
+  .estimate-label { font-size: 14px; color: #333; display: flex; align-items: center; gap: 4px; }
+  .estimate-label::before { content: ''; width: 3px; height: 14px; background: #43B356; border-radius: 2px; }
+  .estimate-value { font-size: 16px; font-weight: 600; color: #43B356; }
+
+  /* Note section */
+  .note-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+  .note-textarea { width: 100%; border: none; outline: none; font-size: 14px; color: #333; min-height: 60px; resize: none; }
+  .note-textarea::placeholder { color: #ccc; }
+  .note-count { text-align: right; font-size: 12px; color: #ccc; }
+
+  /* Submit button */
+  .submit-area { padding: 16px; margin-top: 8px; }
+  .submit-btn { width: 100%; height: 48px; background: #43B356; border: none; border-radius: 24px; color: #fff; font-size: 17px; font-weight: 600; cursor: pointer; }
+  .submit-btn:active { background: #3aa04c; }
+  .submit-btn.disabled { background: #ccc; cursor: not-allowed; }
+
+  /* Demo switcher */
+  .demo-switcher { position: fixed; top: 0; left: 0; right: 0; max-width: 420px; margin: 0 auto; background: #333; color: #fff; display: flex; z-index: 10; font-size: 12px; }
+  .demo-switcher button { flex: 1; padding: 8px; background: none; border: none; color: #aaa; font-size: 12px; cursor: pointer; }
+  .demo-switcher button.active { color: #fff; background: #43B356; }
+  body { padding-top: 36px; }
+</style>
+</head>
+<body>
+
+<!-- Demo mode switcher -->
+<div class="demo-switcher">
+  <button class="active" onclick="switchMode('limit')">限额提现模式</button>
+  <button onclick="switchMode('freeze')">完全冻结模式</button>
+  <button onclick="switchMode('normal')">正常模式</button>
+</div>
+
+<div class="header">
+  <a class="header-back" href="#">‹</a>
+  <div class="header-title">提现</div>
+</div>
+
+<!-- Limit Warning Banner -->
+<div class="warning-banner" id="limitBanner">
+  <div class="warning-icon">⚠️</div>
+  <div class="warning-text">
+    <strong>提现限制通知</strong><br>
+    您的门店当前处于提现限额状态，单笔提现金额不超过 <strong>¥5,000.00</strong>。如有疑问，请联系平台客服或对接运营人员。
+  </div>
+</div>
+
+<!-- Freeze Warning Banner -->
+<div class="freeze-banner warning-banner" id="freezeBanner" style="display:none;">
+  <div class="warning-icon">🚫</div>
+  <div class="warning-text">
+    <strong>提现功能已暂停</strong><br>
+    因相关事项核查，您的门店提现功能已暂时冻结。如有疑问，请联系平台客服或对接运营人员。
+  </div>
+</div>
+
+<!-- Bank Card -->
+<div class="section">
+  <div class="section-label">到账银行卡/银行账户</div>
+  <div class="bank-row">
+    <div class="bank-icon">民</div>
+    <div class="bank-name">中国民生银行 (***0022)</div>
+    <div class="bank-instant">立即到账</div>
+  </div>
+</div>
+
+<!-- Amount Section -->
+<div class="section" id="amountSection">
+  <div class="amount-title">提现金额</div>
+  <div class="amount-input-row">
+    <span class="amount-yen">¥</span>
+    <input class="amount-input" type="text" placeholder="0.00" id="amountInput">
+  </div>
+  <div class="balance-row">
+    <span class="balance-text">可用余额 ¥15,735.28</span>
+    <span class="balance-all" id="withdrawAll" onclick="fillMax()">全部提现</span>
+  </div>
+
+  <!-- Limit notice inside amount area -->
+  <div class="limit-notice" id="limitNotice">
+    <span class="icon">💡</span>
+    <span>当前单笔提现限额 <strong>¥5,000.00</strong>，超出部分可分多次提现。</span>
+  </div>
+
+  <!-- Reserve -->
+  <div class="reserve-row">
+    <div class="reserve-label">
+      最低预留金额
+      <span class="badge-new">新</span>
+      <span class="help-icon">?</span>
+    </div>
+    <div class="toggle"></div>
+  </div>
+  <div class="reserve-input">¥ 5000</div>
+  <div class="reserve-desc">
+    自动提现时将保留此金额，超出部分自动打款。<br>
+    本次实际提现 = 余额 — 预留金额
+  </div>
+  <div class="estimate-row">
+    <span class="estimate-label">本次自动提现预估</span>
+    <span class="estimate-value" id="estimateValue">¥5,000.00</span>
+  </div>
+</div>
+
+<!-- Note Section -->
+<div class="section">
+  <div class="note-title">提现说明</div>
+  <textarea class="note-textarea" placeholder="请输入"></textarea>
+  <div class="note-count">0/128</div>
+</div>
+
+<!-- Submit -->
+<div class="submit-area">
+  <button class="submit-btn" id="submitBtn">提现</button>
+</div>
+
+<script>
+let currentMode = 'limit';
+const MAX_LIMIT = 5000;
+const BALANCE = 15735.28;
+
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.demo-switcher button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  const limitBanner = document.getElementById('limitBanner');
+  const freezeBanner = document.getElementById('freezeBanner');
+  const amountSection = document.getElementById('amountSection');
+  const submitBtn = document.getElementById('submitBtn');
+  const limitNotice = document.getElementById('limitNotice');
+  
+  if (mode === 'freeze') {
+    limitBanner.style.display = 'none';
+    freezeBanner.style.display = 'flex';
+    amountSection.style.opacity = '0.5';
+    amountSection.style.pointerEvents = 'none';
+    submitBtn.className = 'submit-btn disabled';
+    submitBtn.textContent = '提现功能已暂停';
+    limitNotice.style.display = 'none';
+  } else if (mode === 'limit') {
+    limitBanner.style.display = 'flex';
+    freezeBanner.style.display = 'none';
+    amountSection.style.opacity = '1';
+    amountSection.style.pointerEvents = 'auto';
+    submitBtn.className = 'submit-btn';
+    submitBtn.textContent = '提现';
+    limitNotice.style.display = 'flex';
+    document.getElementById('estimateValue').textContent = '¥5,000.00';
+  } else {
+    limitBanner.style.display = 'none';
+    freezeBanner.style.display = 'none';
+    amountSection.style.opacity = '1';
+    amountSection.style.pointerEvents = 'auto';
+    submitBtn.className = 'submit-btn';
+    submitBtn.textContent = '提现';
+    limitNotice.style.display = 'none';
+    document.getElementById('estimateValue').textContent = '¥10,735.28';
+  }
+}
+
+function fillMax() {
+  const max = currentMode === 'limit' ? Math.min(MAX_LIMIT, BALANCE) : BALANCE;
+  document.getElementById('amountInput').value = max.toFixed(2);
+}
+</script>
+</body>
+</html>

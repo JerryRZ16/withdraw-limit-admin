@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>门店提现限制管理系统</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif; background: #f5f6fa; color: #333; }
+  
+  /* Navigation */
+  .nav { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; display: flex; align-items: center; height: 56px; }
+  .nav-logo { font-size: 18px; font-weight: 600; color: #43B356; margin-right: 32px; }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { text-decoration: none; color: #666; font-size: 14px; padding: 16px 0; border-bottom: 2px solid transparent; }
+  .nav-links a.active { color: #43B356; border-bottom-color: #43B356; font-weight: 500; }
+  .nav-user { margin-left: auto; font-size: 14px; color: #999; }
+
+  /* Layout */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .page-title { font-size: 20px; font-weight: 600; }
+  .page-desc { font-size: 13px; color: #999; margin-top: 4px; }
+
+  /* Stats Cards */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: #fff; border-radius: 8px; padding: 20px; }
+  .stat-label { font-size: 13px; color: #999; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 600; }
+  .stat-value.green { color: #43B356; }
+  .stat-value.orange { color: #F5A623; }
+  .stat-value.red { color: #E74C3C; }
+
+  /* Card */
+  .card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* Filter Bar */
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-bar input, .filter-bar select { height: 36px; border: 1px solid #ddd; border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: #43B356; }
+  .filter-bar input { width: 220px; }
+
+  /* Buttons */
+  .btn { height: 36px; padding: 0 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .btn-primary { background: #43B356; color: #fff; }
+  .btn-primary:hover { background: #3aa04c; }
+  .btn-danger { background: #fff; color: #E74C3C; border: 1px solid #E74C3C; }
+  .btn-danger:hover { background: #fef2f0; }
+  .btn-outline { background: #fff; color: #666; border: 1px solid #ddd; }
+  .btn-outline:hover { border-color: #43B356; color: #43B356; }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .btn-text { background: none; border: none; color: #43B356; cursor: pointer; font-size: 13px; padding: 0; }
+  .btn-text.danger { color: #E74C3C; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #fafafa; text-align: left; padding: 12px; font-weight: 500; color: #666; border-bottom: 1px solid #eee; white-space: nowrap; }
+  td { padding: 12px; border-bottom: 1px solid #f5f5f5; }
+  tr:hover { background: #fafbfc; }
+
+  /* Tags / Badges */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .tag-red { background: #fef0ef; color: #E74C3C; }
+  .tag-orange { background: #fef7ec; color: #F5A623; }
+  .tag-green { background: #edf7ee; color: #43B356; }
+  .tag-gray { background: #f5f5f5; color: #999; }
+
+  /* Modal Overlay */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; width: 520px; max-height: 80vh; overflow-y: auto; }
+  .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+  .form-label .required { color: #E74C3C; }
+  .form-input { width: 100%; height: 36px; border: 1px solid #ddd; border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; }
+  .form-input:focus { border-color: #43B356; }
+  .form-select { width: 100%; height: 36px; border: 1px solid #ddd; border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; background: #fff; }
+  .form-textarea { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 10px 12px; font-size: 13px; outline: none; resize: vertical; min-height: 80px; }
+  .form-hint { font-size: 12px; color: #999; margin-top: 4px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+
+  /* Radio Group */
+  .radio-group { display: flex; gap: 16px; }
+  .radio-group label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+
+  /* Empty State */
+  .empty { text-align: center; padding: 48px 0; color: #ccc; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* Pagination */
+  .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: #999; }
+  .page-btns { display: flex; gap: 4px; }
+  .page-btn { width: 32px; height: 32px; border: 1px solid #ddd; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; font-size: 13px; }
+  .page-btn.active { background: #43B356; color: #fff; border-color: #43B356; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid #eee; margin-bottom: 16px; }
+  .tab { padding: 10px 20px; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab.active { color: #43B356; border-bottom-color: #43B356; font-weight: 500; }
+
+  /* Log timeline */
+  .log-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+  .log-time { color: #999; white-space: nowrap; min-width: 140px; }
+  .log-content { flex: 1; }
+  .log-user { color: #43B356; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<div class="nav">
+  <div class="nav-logo">💰 提现管理</div>
+  <div class="nav-links">
+    <a href="#" class="active">限制清单</a>
+    <a href="#" onclick="showTab('logs')">操作日志</a>
+  </div>
+  <div class="nav-user">管理员：张三 | 法务部</div>
+</div>
+
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">门店提现限制管理</div>
+      <div class="page-desc">配置门店提现限制规则，支持完全冻结或限额提现。限制生效后，门店端将显示对应提示。</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ 新增限制</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">限制中门店</div>
+      <div class="stat-value">12</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">完全冻结</div>
+      <div class="stat-value red">5</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">限额提现</div>
+      <div class="stat-value orange">7</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">本月新增</div>
+      <div class="stat-value green">3</div>
+    </div>
+  </div>
+
+  <!-- Main Table Card -->
+  <div class="card" id="listTab">
+    <div class="card-title">
+      限制清单
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm">📥 导出</button>
+        <button class="btn btn-outline btn-sm">🔄 刷新</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <input type="text" placeholder="搜索门店名称 / ID" id="searchInput">
+      <select>
+        <option value="">全部限制类型</option>
+        <option>完全冻结</option>
+        <option>限额提现</option>
+      </select>
+      <select>
+        <option value="">全部状态</option>
+        <option>生效中</option>
+        <option>已解除</option>
+        <option>待生效</option>
+      </select>
+      <button class="btn btn-outline btn-sm">查询</button>
+      <button class="btn btn-outline btn-sm">重置</button>
+    </div>
+
+    <!-- Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>门店ID</th>
+          <th>门店名称</th>
+          <th>限制类型</th>
+          <th>限额(元)</th>
+          <th>原因</th>
+          <th>发起部门</th>
+          <th>状态</th>
+          <th>生效时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>S100234</td>
+          <td>星光花园店</td>
+          <td><span class="tag tag-red">完全冻结</span></td>
+          <td>—</td>
+          <td>法务协查 #2024-0312</td>
+          <td>法务部</td>
+          <td><span class="tag tag-red">生效中</span></td>
+          <td>2026-03-20 14:30</td>
+          <td>
+            <button class="btn-text" onclick="openDetail()">详情</button>
+            <button class="btn-text danger">解除</button>
+          </td>
+        </tr>
+        <tr>
+          <td>S100567</td>
+          <td>万达广场旗舰店</td>
+          <td><span class="tag tag-orange">限额提现</span></td>
+          <td>5,000</td>
+          <td>财务审计配合</td>
+          <td>财务部</td>
+          <td><span class="tag tag-red">生效中</span></td>
+          <td>2026-03-18 09:15</td>
+          <td>
+            <button class="btn-text" onclick="openDetail()">详情</button>
+            <button class="btn-text danger">解除</button>
+          </td>
+        </tr>
+        <tr>
+          <td>S100891</td>
+          <td>海岸城购物中心店</td>
+          <td><span class="tag tag-red">完全冻结</span></td>
+          <td>—</td>
+          <td>法务协查 #2024-0298</td>
+          <td>法务部</td>
+          <td><span class="tag tag-red">生效中</span></td>
+          <td>2026-03-15 11:00</td>
+          <td>
+            <button class="btn-text" onclick="openDetail()">详情</button>
+            <button class="btn-text danger">解除</button>
+          </td>
+        </tr>
+        <tr>
+          <td>S101023</td>
+          <td>银泰百货中心店</td>
+          <td><span class="tag tag-orange">限额提现</span></td>
+          <td>10,000</td>
+          <td>异常交易排查</td>
+          <td>风控部</td>
+          <td><span class="tag tag-red">生效中</span></td>
+          <td>2026-03-14 16:45</td>
+          <td>
+            <button class="btn-text" onclick="openDetail()">详情</button>
+            <button class="btn-text danger">解除</button>
+          </td>
+        </tr>
+        <tr>
+          <td>S100102</td>
+          <td>天河城店</td>
+          <td><span class="tag tag-red">完全冻结</span></td>
+          <td>—</td>
+          <td>法务协查 #2024-0275</td>
+          <td>法务部</td>
+          <td><span class="tag tag-gray">已解除</span></td>
+          <td>2026-02-20 10:00</td>
+          <td>
+            <button class="btn-text" onclick="openDetail()">详情</button>
+          </td>
+        </tr>
+        <tr>
+          <td>S100445</td>
+          <td>来福士广场店</td>
+          <td><span class="tag tag-orange">限额提现</span></td>
+          <td>2,000</td>
+          <td>合同纠纷处理中</td>
+          <td>法务部</td>
+          <td><span class="tag tag-red">生效中</span></td>
+          <td>2026-03-22 08:30</td>
+          <td>
+            <button class="btn-text" onclick="openDetail()">详情</button>
+            <button class="btn-text danger">解除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <span>共 12 条记录</span>
+      <div class="page-btns">
+        <div class="page-btn">‹</div>
+        <div class="page-btn active">1</div>
+        <div class="page-btn">2</div>
+        <div class="page-btn">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Tab (hidden by default) -->
+  <div class="card" id="logsTab" style="display:none;">
+    <div class="card-title">操作日志</div>
+    <div class="log-item">
+      <div class="log-time">2026-03-22 08:30:12</div>
+      <div class="log-content"><span class="log-user">张三(法务部)</span> 新增限制：来福士广场店(S100445) — 限额提现 ¥2,000，原因：合同纠纷处理中</div>
+    </div>
+    <div class="log-item">
+      <div class="log-time">2026-03-20 14:30:05</div>
+      <div class="log-content"><span class="log-user">张三(法务部)</span> 新增限制：星光花园店(S100234) — 完全冻结，原因：法务协查 #2024-0312</div>
+    </div>
+    <div class="log-item">
+      <div class="log-time">2026-03-20 10:15:33</div>
+      <div class="log-content"><span class="log-user">李四(法务部)</span> 解除限制：天河城店(S100102)，原因：协查完毕，恢复正常</div>
+    </div>
+    <div class="log-item">
+      <div class="log-time">2026-03-18 09:15:20</div>
+      <div class="log-content"><span class="log-user">王五(财务部)</span> 新增限制：万达广场旗舰店(S100567) — 限额提现 ¥5,000，原因：财务审计配合</div>
+    </div>
+    <div class="log-item">
+      <div class="log-time">2026-03-15 11:00:08</div>
+      <div class="log-content"><span class="log-user">张三(法务部)</span> 新增限制：海岸城购物中心店(S100891) — 完全冻结，原因：法务协查 #2024-0298</div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-title">新增提现限制</div>
+    <div class="form-group">
+      <label class="form-label"><span class="required">*</span> 门店</label>
+      <input class="form-input" placeholder="输入门店ID或名称搜索">
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="required">*</span> 限制类型</label>
+      <div class="radio-group">
+        <label><input type="radio" name="type" value="freeze" checked onchange="toggleLimit(this)"> 完全冻结</label>
+        <label><input type="radio" name="type" value="limit" onchange="toggleLimit(this)"> 限额提现</label>
+      </div>
+      <div class="form-hint">完全冻结：门店无法发起任何提现；限额提现：单笔/单日提现不超过设定金额</div>
+    </div>
+    <div class="form-group" id="limitAmountGroup" style="display:none;">
+      <label class="form-label"><span class="required">*</span> 限额金额（元）</label>
+      <input class="form-input" type="number" placeholder="输入限额金额">
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="required">*</span> 发起部门</label>
+      <select class="form-select">
+        <option>法务部</option>
+        <option>财务部</option>
+        <option>风控部</option>
+        <option>合规部</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label"><span class="required">*</span> 限制原因</label>
+      <textarea class="form-textarea" placeholder="请输入限制原因，如：法务协查案件编号、财务审计说明等"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">附件/协查函</label>
+      <div style="border:1px dashed #ddd;border-radius:6px;padding:20px;text-align:center;color:#999;font-size:13px;cursor:pointer;">
+        📎 点击上传协查函或相关文件
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">生效时间</label>
+      <div class="radio-group">
+        <label><input type="radio" name="effective" value="now" checked> 立即生效</label>
+        <label><input type="radio" name="effective" value="schedule"> 定时生效</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="closeModal()">确认提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal() {
+  document.getElementById('addModal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('addModal').classList.remove('active');
+}
+function toggleLimit(el) {
+  document.getElementById('limitAmountGroup').style.display = el.value === 'limit' ? 'block' : 'none';
+}
+function showTab(tab) {
+  if (tab === 'logs') {
+    document.getElementById('listTab').style.display = 'none';
+    document.getElementById('logsTab').style.display = 'block';
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.nav-links a')[1].classList.add('active');
+  } else {
+    document.getElementById('listTab').style.display = 'block';
+    document.getElementById('logsTab').style.display = 'none';
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    document.querySelectorAll('.nav-links a')[0].classList.add('active');
+  }
+}
+function openDetail() {
+  alert('详情弹窗（演示）');
+}
+document.querySelectorAll('.nav-links a')[0].onclick = function(e) { e.preventDefault(); showTab('list'); };
+</script>
+</body>
+</html>
